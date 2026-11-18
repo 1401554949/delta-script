@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>被留下的人 · 第一章 零号大坝</title>
+<style>
+  :root{
+    --ink:#ece5d8; --dim:#9c9488; --amber:#d8a35a; --amber-dim:#8a6a3d;
+    --red:#b23a32; --teal:#4d6f6c; --panel:rgba(10,12,12,.78);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:#050606;overflow:hidden;
+    font-family:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    color:var(--ink);}
+  #stage{position:fixed;inset:0;overflow:hidden;}
+  #shot{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;
+    filter:brightness(.7) saturate(.92) contrast(1.06) blur(.2px);
+    transform:scale(1.02); transition:opacity .55s ease;}
+  #shot.kb{animation:kb 24s ease-in-out infinite alternate;}
+  @keyframes kb{from{transform:scale(1.02) translate(0,0);}to{transform:scale(1.09) translate(-1.2%,-1%);}}
+  #shade{position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 50% 35%, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 100%),
+      linear-gradient(0deg, rgba(3,4,4,.98) 0%, rgba(3,4,4,.72) 18%, rgba(3,4,4,0) 46%),
+      linear-gradient(180deg, rgba(3,4,4,.86) 0%, rgba(3,4,4,0) 22%);}
+  #grain{position:absolute;inset:0;pointer-events:none;opacity:.055;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.9'/></svg>");}
+  #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+    align-items:center;padding:22px 30px;font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:12px;letter-spacing:.22em;color:rgba(236,229,216,.55);z-index:30;pointer-events:none;}
+  #hud .right{pointer-events:auto;display:flex;gap:18px;}
+  #hud button{background:none;border:0;color:rgba(236,229,216,.55);font:inherit;letter-spacing:.18em;
+    cursor:pointer;padding:4px 2px;border-bottom:1px solid transparent;}
+  #hud button:hover{color:var(--amber);border-bottom-color:var(--amber-dim);}
+
+  #subwrap{position:absolute;left:0;right:0;bottom:0;padding:0 6vw 6.2vh;z-index:20;
+    display:flex;justify-content:center;pointer-events:none;}
+  #subtitle{width:min(1060px,100%);padding:6px 2px 0;opacity:0;transform:translateY(10px);
+    transition:opacity .35s ease,transform .35s ease;}
+  #subtitle.on{opacity:1;transform:none;}
+  #name{font-family:"Microsoft YaHei","PingFang SC",sans-serif;font-size:13px;letter-spacing:.26em;
+    color:var(--amber);margin-bottom:9px;min-height:16px;display:flex;align-items:center;gap:10px;}
+  #name::after{content:"";display:block;height:1px;width:38px;background:var(--amber-dim);opacity:.8;}
+  #name.narr{color:rgba(236,229,216,.45);}
+  #name.narr::after{background:rgba(236,229,216,.2);}
+  #text{font-size:clamp(17px,1.55vw,23px);line-height:1.82;letter-spacing:.02em;
+    color:#f2ecdf;text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.8);}
+  #hint{position:absolute;right:6vw;bottom:2.2vh;font-family:"Microsoft YaHei",sans-serif;
+    font-size:11px;letter-spacing:.22em;color:rgba(236,229,216,.32);z-index:21;opacity:0;transition:opacity .3s;}
+  #hint.on{opacity:1;}
+
+  #choices{position:absolute;left:0;right:0;bottom:0;top:0;z-index:40;display:none;
+    align-items:center;justify-content:center;flex-direction:column;gap:13px;
+    background:linear-gradient(0deg,rgba(3,4,4,.96) 0%,rgba(3,4,4,.55) 55%,rgba(3,4,4,.3) 100%);
+    padding:8vh 5vw;}
+  #choices.on{display:flex;}
+  #prompt{font-family:"Microsoft YaHei",sans-serif;font-size:12px;letter-spacing:.3em;
+    color:var(--amber);margin-bottom:12px;text-align:center;}
+  .opt{width:min(860px,100%);display:flex;gap:16px;align-items:flex-start;text-align:left;
+    background:var(--panel);border:1px solid rgba(236,229,216,.14);border-left:2px solid rgba(216,163,90,.35);
+    color:var(--ink);padding:16px 20px;font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:clamp(14px,1.12vw,16px);line-height:1.6;cursor:pointer;backdrop-filter:blur(8px);
+    transition:border-color .18s,background .18s,transform .18s;}
+  .opt:hover{border-color:rgba(216,163,90,.75);border-left-color:var(--amber);
+    background:rgba(26,24,20,.86);transform:translateX(3px);}
+  .opt .k{flex:none;font-family:Georgia,serif;font-size:13px;color:var(--amber);letter-spacing:.1em;
+    border:1px solid rgba(216,163,90,.4);width:22px;height:22px;display:flex;align-items:center;
+    justify-content:center;margin-top:1px;}
+  .opt:hover .k{background:var(--amber);color:#141210;}
+
+  .card{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    flex-direction:column;text-align:center;padding:6vh 7vw;}
+  .card.on{display:flex;animation:fadein .5s ease;}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  #death{background:radial-gradient(90% 80% at 50% 42%,rgba(96,16,12,.42) 0%,rgba(4,4,4,.97) 62%);}
+  #death .tag{font-family:"Microsoft YaHei",sans-serif;font-size:12px;letter-spacing:.55em;
+    color:var(--red);margin-bottom:18px;}
+  #death .title{font-size:clamp(38px,4.6vw,66px);letter-spacing:.14em;color:#e9dccb;
+    text-shadow:0 0 44px rgba(178,58,50,.5);margin:0 0 22px;}
+  #death .rule{width:54px;height:1px;background:rgba(178,58,50,.7);margin:0 0 24px;}
+  #death .sum{max-width:640px;font-size:clamp(14px,1.15vw,17px);line-height:1.9;
+    color:rgba(236,229,216,.72);margin-bottom:10px;}
+  #death .note{max-width:640px;font-family:"Microsoft YaHei",sans-serif;font-size:12px;
+    line-height:1.8;color:rgba(236,229,216,.38);margin:14px 0 34px;letter-spacing:.04em;}
+  .btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+  .btn{font-family:"Microsoft YaHei",sans-serif;font-size:13px;letter-spacing:.16em;
+    padding:12px 26px;background:transparent;color:var(--ink);cursor:pointer;
+    border:1px solid rgba(236,229,216,.28);transition:all .18s;}
+  .btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(216,163,90,.07);}
+  .btn.primary{border-color:rgba(216,163,90,.6);color:var(--amber);}
+  .btn.primary:hover{background:var(--amber);color:#141210;}
+
+  #endlay{background:radial-gradient(90% 80% at 50% 40%,rgba(38,62,58,.5) 0%,rgba(4,4,4,.97) 65%);}
+  #endlay .tag{font-family:"Microsoft YaHei",sans-serif;font-size:12px;letter-spacing:.55em;
+    color:var(--amber);margin-bottom:16px;}
+  #endlay .title{font-size:clamp(34px,4vw,58px);letter-spacing:.2em;margin:0 0 8px;}
+  #endlay .sub{font-family:"Microsoft YaHei",sans-serif;font-size:13px;letter-spacing:.28em;
+    color:var(--dim);margin-bottom:34px;}
+  #endlay .body{max-width:640px;font-size:clamp(14px,1.15vw,17px);line-height:2.1;
+    color:rgba(236,229,216,.8);margin-bottom:28px;}
+  #endlay .stats{font-family:"Microsoft YaHei",sans-serif;font-size:12px;letter-spacing:.12em;
+    color:rgba(236,229,216,.45);margin-bottom:34px;line-height:2;}
+  #endlay .stats b{color:var(--amber);font-weight:400;}
+
+  #title{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;background:
+      radial-gradient(80% 70% at 50% 45%,rgba(0,0,0,.35),rgba(3,4,4,.92) 70%),
+      url("assets/dam.jpg") center/cover no-repeat;}
+  #title .small{font-family:"Microsoft YaHei",sans-serif;font-size:12px;letter-spacing:.5em;
+    color:rgba(216,163,90,.85);margin-bottom:26px;}
+  #title h1{font-size:clamp(46px,6.4vw,92px);letter-spacing:.16em;margin:0;font-weight:400;
+    text-shadow:0 6px 60px rgba(0,0,0,.9);}
+  #title .line{width:1px;height:52px;background:linear-gradient(180deg,var(--amber-dim),transparent);
+    margin:26px 0;}
+  #title .cap{font-family:"Microsoft YaHei",sans-serif;font-size:13px;letter-spacing:.3em;
+    color:rgba(236,229,216,.6);margin-bottom:44px;}
+  #title .btns{flex-direction:column;gap:12px;width:min(320px,80vw);}
+  #title .btn{width:100%;padding:14px;letter-spacing:.24em;}
+  #title .foot{position:absolute;bottom:26px;font-family:"Microsoft YaHei",sans-serif;
+    font-size:10px;letter-spacing:.22em;color:rgba(236,229,216,.3);}
+
+  #menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+    background:rgba(3,4,4,.86);backdrop-filter:blur(6px);}
+  #menu.on{display:flex;}
+  #menu .box{width:min(360px,84vw);border:1px solid rgba(236,229,216,.14);padding:30px 26px;
+    background:rgba(12,13,13,.92);display:flex;flex-direction:column;gap:10px;}
+  #menu .box h3{font-weight:400;font-size:13px;letter-spacing:.3em;color:var(--amber);
+    margin:0 0 14px;font-family:"Microsoft YaHei",sans-serif;text-align:center;}
+  #menu .btn{width:100%;padding:12px;}
+
+  #director{position:fixed;inset:0;z-index:90;display:none;background:rgba(3,5,5,.95);
+    padding:40px;overflow:auto;font-family:Consolas,Monaco,monospace;font-size:12px;
+    line-height:1.7;color:#9fd0c8;}
+  #director.on{display:block;}
+  #director h4{color:var(--amber);font-weight:400;letter-spacing:.2em;margin:0 0 12px;}
+  #director .jump{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 24px;}
+  #director .jump button{font-family:inherit;font-size:11px;padding:4px 8px;background:none;
+    color:#9fd0c8;border:1px solid rgba(159,208,200,.3);cursor:pointer;}
+  #director .jump button:hover{background:#9fd0c8;color:#08110f;}
+  #director pre{white-space:pre-wrap;color:#c9c3b6;}
+  #director .close{position:fixed;top:26px;right:36px;color:#9fd0c8;cursor:pointer;
+    border:1px solid rgba(159,208,200,.35);padding:6px 14px;font-family:inherit;}
+  .hide{display:none!important;}
+  @media (max-width:720px){
+    #hud{padding:16px 18px;font-size:10px;}
+    #subwrap{padding:0 6vw 7.5vh;}
+    #hint{right:6vw;bottom:2.6vh;}
+    #choices{padding:9vh 6vw;}
+    .card{padding:5vh 8vw;}
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <img id="shot" alt="">
+  <div id="shade"></div>
+  <div id="grain"></div>
+</div>
+
+<div id="hud">
+  <div class="left" id="chapterLabel">第一章 · 零号大坝</div>
+  <div class="right">
+    <button id="btnMenu">菜单</button>
+  </div>
+</div>
+
+<div id="subwrap"><div id="subtitle">
+  <div id="name"></div>
+  <div id="text"></div>
+</div></div>
+<div id="hint">点击继续 · 空格</div>
+
+<div id="choices">
+  <div id="prompt"></div>
+  <div id="opts"></div>
+</div>
+
+<div class="card" id="death">
+  <div class="tag">死 亡 结 局</div>
+  <h2 class="title" id="deathTitle"></h2>
+  <div class="rule"></div>
+  <div class="sum" id="deathSum"></div>
+  <div class="note" id="deathNote"></div>
+  <div class="btns">
+    <button class="btn primary" id="btnBack">回溯到选择</button>
+    <button class="btn" id="btnRestart1">从头开始</button>
+  </div>
+</div>
+
+<div class="card" id="endlay">
+  <div class="tag">第 一 章 完</div>
+  <h2 class="title" id="endTitle">被留下的人</h2>
+  <div class="sub" id="endSub">零号大坝</div>
+  <div class="body" id="endBody"></div>
+  <div class="stats" id="endStats"></div>
+  <div class="btns">
+    <button class="btn primary" id="btnReplay">重玩本章</button>
+    <button class="btn" id="btnToTitle">回到标题</button>
+  </div>
+</div>
+
+<div id="title">
+  <div class="small">互 动 叙 事 · 试 玩 原 型</div>
+  <h1>被留下的人</h1>
+  <div class="line"></div>
+  <div class="cap">第一章 · 零号大坝</div>
+  <div class="btns">
+    <button class="btn primary" id="btnStart">开 始</button>
+    <button class="btn" id="btnContinue">继续上次</button>
+    <button class="btn" id="btnHow">怎 么 玩</button>
+  </div>
+  <div class="foot">v0.1 · 仅第一章 · 素材为关键帧占位，非最终视频</div>
+</div>
+
+<div id="menu">
+  <div class="box">
+    <h3>菜 单</h3>
+    <button class="btn" id="mResume">继续</button>
+    <button class="btn" id="mRestart">重玩本章</button>
+    <button class="btn" id="mDirector">导演模式</button>
+    <button class="btn" id="mTitle">回到标题</button>
+    <button class="btn" id="mMute">声音：开</button>
+  </div>
+</div>
+
+<div id="director">
+  <div class="close" id="dClose">关闭 (D)</div>
+  <h4>导演模式 · 节点与状态</h4>
+  <pre id="dState"></pre>
+  <h4>跳转节点</h4>
+  <div class="jump" id="dJump"></div>
+</div>
+
+<script>
+/* ============================================================
+   数据区：第一章 全量节点
+   lines: [说话人, 文本]，说话人为空 = 旁白
+   ============================================================ */
+const CH1 = {
+  start: "p0",
+  nodes: {
+    p0: { t:"scene", ch:"序", img:"assets/hero.jpg", next:"s1a", lines:[
+      ["","这是我第一次随正式行动队执行任务。红狼带队，蜂医负责医疗。"],
+      ["","我们要前往零号大坝外围的维修区，接回失联十七小时的情报联络员灰鹭，并取回他携带的资料。"],
+      ["","抵达时，附近已有阿萨拉卫队搜查。我们避开巡逻，从后门接近了灰鹭最后出现的维修间。"]
+    ]},
+
+    s1a: { t:"scene", ch:"1-1 门后的枪", img:"assets/corridor.jpg", next:"s1b", lines:[
+      ["","两名阿萨拉卫队士兵刚从前院离开，鞋底踩过碎玻璃的声音还没消失。红狼让我们沿外墙靠近后面的维修间。"],
+      ["红狼","灰鹭。接应。"],
+      ["","门后没有回应。"],
+      ["红狼","有医疗人员。"],
+      ["","里面响起拖动声。一只身份终端从门缝伸出来，边缘沾着血。核验通过。"],
+      ["","门打开时，我先看见一支手枪。"]
+    ]},
+
+    s1b: { t:"scene", ch:"1-1 门后的枪", img:"assets/huilu.jpg", next:"s1c", lines:[
+      ["","灰鹭靠着工作台，枪口朝下，左腿的布料湿了一大片。他的视线从我们的臂章移到院外，最后停在红狼脸上。"],
+      ["灰鹭","接我的车呢？"],
+      ["红狼","在外围。你能走吗？"],
+      ["灰鹭","哪一辆？"],
+      ["蜂医","先让我看腿。"],
+      ["","灰鹭没有拒绝处理伤口，握枪的手却没松。"],
+      ["红狼","枪放下。"],
+      ["","灰鹭照做，手仍按在枪旁。"],
+      ["灰鹭","你们的任务怎么说的？接我，还是取资料？"],
+      ["红狼","两样。"],
+      ["灰鹭","新来的？"],
+      ["","他看了我一眼。"],
+      ["灰鹭","那你记住他说了什么。"],
+      ["红狼","蜂医处理伤口。新人，把情况问清楚。我看前面。"]
+    ]},
+
+    s1c: { t:"scene", ch:"1-1 门后的枪", img:"assets/huilu.jpg", next:"c1", lines:[
+      ["","我站到工作台边。灰鹭的包就在他脚下，拉链开着，里面露出密封资料匣的一角。"],
+      ["我","资料在这里？"],
+      ["灰鹭","在。封条没动。"],
+      ["我","你为什么没按安排交接？"],
+      ["灰鹭","换了你，车提前来了，人能报出代号，证件也对，你上不上？"],
+      ["我","看情况。"],
+      ["灰鹭","我当时就看了一眼。"],
+      ["","蜂医揭开临时包扎，他疼得抓紧了桌沿。"],
+      ["","我等他缓过来。他却不再往下说，反而把资料匣往我这边推了一点。"],
+      ["灰鹭","先拿好这个。"]
+    ]},
+
+    c1: { t:"choice", ch:"1-1 门后的枪", img:"assets/huilu.jpg", prompt:"选择一 · 先问清什么", lines:[
+      ["","门外随时会有人回来。我只来得及问一个问题。"]
+    ], options:[
+      { k:"A", text:"把接应车辆和人员特征告诉我。我先让指挥台核对，省得再次接错。", next:"c1a", stats:{gti:1} },
+      { k:"B", text:"先不核车。你离开接应点以后怎么到这里的？还有没有别的出口？", next:"c1b", flags:{tunnel:true}, stats:{gti:1} },
+      { k:"C", text:"我先确认资料有没有缺失。车的事，等你缓过来再说。", next:"c1c", flags:{tunnel:true,westExit:true}, stats:{asala:1} }
+    ]},
+
+    c1a: { t:"death", ch:"1-1 门后的枪", img:"assets/ruins.jpg", title:"核对之后",
+      note:"回溯：选择一", summary:"你想先取得可靠的确认。等待核验的时间让搜索队截断了退路，灰鹭指出出口时已经来不及。你死在转移途中。",
+      lines:[
+      ["","灰鹭看着我打开通讯。"],
+      ["灰鹭","现在就问？"],
+      ["我","核对一下，后面才能安排。"],
+      ["","我没有直接呼叫公开频道，只通过小队链路提交了核验请求。几分钟后，指挥台回复：原接应身份有效，灰鹭可能因失血和遭袭产生误判。"],
+      ["灰鹭","他们核的是证件。我说的是那辆车里有人朝我开枪。"],
+      ["","通讯另一端仍在要求补齐交接信息。红狼打断问询。"],
+      ["红狼","先撤。"],
+      ["","灰鹭指向后门。前院又传来脚步——核验耽搁的这几分钟里，搜索队已经绕过外墙。我们退回原来的巷子，两端很快响起枪声。我在寻找掩体时被击中胸口，死在两栋建筑之间。"]
+    ]},
+
+    c1b: { t:"scene", ch:"1-1 门后的枪", img:"assets/huilu.jpg", next:"m1", lines:[
+      ["灰鹭","后面的泵房。底下有检修道。"],
+      ["我","你从那边进来的？"],
+      ["灰鹭","是。有个岔口，右边已经塌了，左边能通旧检修场。地图上不一定标着。"],
+      ["我","你记得接应的车吗？"],
+      ["灰鹭","白色医疗车，右侧后窗贴着灰胶带。我逃走时，它沿路找过我。"],
+      ["我","你确定是同一辆？"],
+      ["灰鹭","窗角缺了一块，胶带没贴平。我就是从那扇窗看见里面的人拿枪。"],
+      ["","他盯着我的终端。"],
+      ["灰鹭","等离开这里，你再决定要不要信。"]
+    ]},
+
+    c1c: { t:"scene", ch:"1-1 门后的枪", img:"assets/huilu.jpg", next:"m1", lines:[
+      ["","我按任务清单核对资料匣，封条完好，数量一致。"],
+      ["灰鹭","你们拿到东西了。"],
+      ["我","现在带你走。"],
+      ["灰鹭","原路出去？"],
+      ["我","有别的路？"],
+      ["灰鹭","下面有检修道，左边通旧检修场。右边塌了。去的时候别挑最近的洞口出来。"],
+      ["灰鹭","我昨晚试过装卸院。北门有人，没过去。"],
+      ["我","西边呢？"],
+      ["灰鹭","有个出料口，被旧铁皮遮着。里面能推开。我伤成这样翻不过去，你们也许可以。"],
+      ["","我记下位置。他又叫住我。"],
+      ["灰鹭","接应如果还是右后窗贴灰胶带的白色医疗车，别让我上去。昨天就是它。"]
+    ]},
+
+    m1: { t:"scene", ch:"1-1 门后的枪", img:"assets/honglang_street.jpg", next:"s2a", lines:[
+      ["","我将路线告诉红狼。"],
+      ["红狼","失联前还联系过谁？"],
+      ["灰鹭","一个能帮我查东西的人。"],
+      ["红狼","名字。"],
+      ["灰鹭","现在不能说。"],
+      ["红狼","你带着受限资料，绕过安排联系了外面的人？"],
+      ["灰鹭","联系过。没交资料。"],
+      ["红狼","这个人能证明？"],
+      ["灰鹭","他能证明我找他查过资料。但我怀疑接应的人想抓我，也会去找其他知情的人。我还不知道你们会把他的名字报给谁。"],
+      ["红狼","你怀疑的事，我们还没核实。回去以后，你得说明联系他的经过。"],
+      ["","门外传来一声呼喊。红狼抬手，让我们停下。"],
+      ["红狼","还能走吗？"],
+      ["蜂医","有人扶，能走。不能再拖。"],
+      ["","红狼接通通讯，报告找到目标、资料完整，请求接应。"]
+    ]},
+
+    s2a: { t:"scene", ch:"1-2 分别转运", img:"assets/huilu.jpg", next:"c2", lines:[
+      ["","指挥台的新命令来得很快。"],
+      ["指挥台","灰鹭涉及未经授权的外部联系，需单独接受核验。考虑伤情，由医疗调查组接收。资料按原计划交接。"],
+      ["红狼","医疗组位置？"],
+      ["","终端上出现坐标。接应人员和车辆信息齐全，验证状态显示有效。灰鹭看见车辆照片，身体突然绷紧。"],
+      ["灰鹭","就是这辆。"],
+      ["","我认出了右后窗的灰色胶带。"],
+      ["红狼","这辆车昨天出现过？"],
+      ["灰鹭","它找过我。你不能把我再送回去。"],
+      ["红狼","有没有别的依据？"],
+      ["灰鹭","人家开枪的时候，没有给我留一份证明。"],
+      ["指挥台","医疗组能提供后续处置。你部完成交接后，不得继续询问案情。"],
+      ["蜂医","他确实需要继续治疗。但现在还能转移。"],
+      ["红狼","我不把伤员留在这里。怎么交接，还没确定。"],
+      ["","他去门边观察搜索队，让我向指挥台回复人员安排。灰鹭抓住我的袖口。"],
+      ["灰鹭","你信证件，还是信我？"],
+      ["我","我连你联系了谁都不知道。"],
+      ["","他的手慢慢松开。"]
+    ]},
+
+    c2: { t:"choice", ch:"1-2 分别转运", img:"assets/huilu.jpg", prompt:"选择二 · 回复接应安排", lines:[
+      ["","耳机里在等我的答复。"]
+    ], options:[
+      { k:"A", text:"申请由我随伤员转运，红狼携资料撤离。人员与资料都有人负责。", next:"c2a", stats:{gti:1} },
+      { k:"B", text:"申请医疗组先派人到维修区，现场确认伤情，再决定怎样分车。", next:"c2b", stats:{gti:1} },
+      { k:"C", text:"申请全员先撤出搜索区。伤员由蜂医处理，到安全位置再交接。", next:"c2c", stats:{gti:2} }
+    ]},
+
+    c2a: { t:"death", ch:"1-2 分别转运", img:"assets/asala.jpg", title:"有人陪同",
+      note:"回溯：选择二", summary:"你给伤员安排了陪同，也给资料安排了负责人。交接方却先处置了能复述现场经过的你。灰鹭被带走，其后情况不明。",
+      lines:[
+      ["","申请获准。我陪灰鹭前往医疗车，红狼保管资料，要求我保持通讯。"],
+      ["","接应人员检查身份，扶灰鹭上车，又把我叫到车尾。"],
+      ["接应人员","他的东西谁拿着？"],
+      ["我","小队长。"],
+      ["接应人员","你看过内容吗？"],
+      ["我","没有。"],
+      ["","他点了一下头。我低头签字，忽然被人从身后按住。通讯器被扯走，枪口顶在背上。"],
+      ["","我倒在那张尚未签完的陪同登记表边，呼吸随着车声渐渐停了。"]
+    ]},
+
+    c2b: { t:"death", ch:"1-2 分别转运", img:"assets/ruins.jpg", title:"原地会合",
+      note:"回溯：选择二", summary:"你想把两支队伍放在同一处核实。等待接应的时间，足够搜索队封住维修区。",
+      lines:[
+      ["","对方要求发送准确位置，并让我们原地等待。"],
+      ["","我提交位置，守在门边。院外的巡逻声一度远去，随后又从另一侧靠近。"],
+      ["","等我们发现搜索队已经绕到后门，撤离通道只剩一段开阔地。"],
+      ["","子弹从前方的楼梯间打来。红狼抓住我的肩带，将我拖回门后。子弹穿过胸口，我的呼吸越来越浅，最终停在了他松手以前。"]
+    ]},
+
+    c2c: { t:"scene", ch:"1-2 分别转运", img:"assets/corridor.jpg", next:"s3a", lines:[
+      ["","指挥台要求我们报告新的交接位置。"],
+      ["红狼","脱离后补报。现在撤离。"],
+      ["","他扶起灰鹭，交到我肩上。"],
+      ["红狼","跟蜂医。别停在门口。"],
+      ["","我们从后门进入泵房。头顶的脚步越来越近，红狼最后下到检修道，轻轻合上盖板。灰鹭靠在墙边喘气，没有再说相信谁。"]
+    ]},
+
+    s3a: { t:"scene", ch:"1-3 地面上的人", img:"assets/corridor.jpg", next:"s3b", lines:[
+      ["","检修道里有积水。每走一步，我都能感觉灰鹭的重量往肩上沉一点。"],
+      ["","经过岔口时，他拉住我。"],
+      ["灰鹭","左边。"],
+      ["","右侧有光，看起来更接近出口。再往前照，才能看见塌下来的混凝土和积水。"],
+      ["","我们沿左边走，直到听见地面传来人声。"],
+      ["阿萨拉士兵","赛伊德来了。把装卸院留出来，其他出口看住！"],
+      ["","我贴近通风口。院子里的人开始撤向两侧。一个身影穿过前方空地，停下来，朝西面做了个手势。"],
+      ["蜂医","他们在重新布防。"],
+      ["","灰鹭闭着眼，嘴唇发白。"]
+    ]},
+
+    s3b: { t:"scene", ch:"1-3 地面上的人", img:"assets/corridor.jpg", next:"c3", lines:[
+      ["","继续走检修道，还要绕到旧检修场。前面的梯子则能直接上到装卸院，路程短得多。"],
+      ["红狼","你问过他的路线。地面出口，有把握吗？"]
+    ]},
+
+    c3: { t:"choice", ch:"1-3 地面上的人", img:"assets/corridor.jpg", prompt:"选择三 · 从哪里出去", lines:[
+      ["","两条路，一条近，一条稳。"]
+    ], options:[
+      { k:"A", text:"从装卸院出去。他们正在调动，趁换位的间隙穿过去。", route:{flag:"westExit", yes:"c3a_w", no:"c3a_n"}, stats:{gti:1} },
+      { k:"B", text:"沿检修道走到底。让他靠墙歇一下，我们轮流扶。", next:"c3b", stats:{gti:1} }
+    ]},
+
+    c3a_w: { t:"scene", ch:"1-3 地面上的人", img:"assets/ruins.jpg", next:"m3", lines:[
+      ["我","不走北门。西侧出料口，铁皮后面能推开。"],
+      ["","红狼先上去查看，随后招手。我们贴着院边移动。出料口比想象中窄，蜂医先钻出去，我扶住灰鹭的肩膀，将他一点点送过门槛。"],
+      ["","院里传来喝令，我没有回头。红狼最后翻出，拉下铁皮挡住缺口。我们沿外墙离开，没有经过北门的火力位置。"]
+    ]},
+
+    c3a_n: { t:"death", ch:"1-3 地面上的人", img:"assets/asala.jpg", title:"最近的出口",
+      note:"回溯：选择三改走检修道；或回溯选择一，取得西侧出料口信息。",
+      summary:"你选择了地面路线，却没有问到具体的通行位置。地图上最近的门，正是有人等候的地方。",
+      lines:[
+      ["","灰鹭只告诉过我检修道的方向，没有说过这座装卸院哪一边能够出去。"],
+      ["","北门是地图上最近的出口。我们沿墙靠近，刚穿过停着叉车的空地，门后便传来上膛声。"],
+      ["","我推灰鹭退向蜂医，自己却已经暴露在门口。枪声响起时，我看见那道刚才显得空着的门，站满了人。"]
+    ]},
+
+    c3b: { t:"scene", ch:"1-3 地面上的人", img:"assets/ruins.jpg", next:"m3", lines:[
+      ["","我们把灰鹭放到墙边。蜂医检查包扎，红狼将伤员的胳膊搭到自己肩上。"],
+      ["红狼","换我。你跟在后面。"],
+      ["","走到旧检修场出口时，我的腿已经开始发软。红狼先出去，确认周围没有人，再伸手拉我。"],
+      ["","地面的风吹到脸上，我才发觉自己一直咬着牙。"]
+    ]},
+
+    m3: { t:"scene", ch:"1-3 地面上的人", img:"assets/fengyi.jpg", next:"s4a", lines:[
+      ["","我们抵达外围遮蔽处。蜂医让灰鹭躺下，接通区域医疗点，确认能够收治。"],
+      ["","原医疗调查组不断催促位置。红狼没有让他们靠近，改为联络我们来时使用的运输支持。对方能到，但要等。"],
+      ["灰鹭","你看，带着我确实慢。"],
+      ["我","现在才说？"],
+      ["","他轻轻笑了一下，随后疼得皱起眉。"],
+      ["灰鹭","包别落下。你们总得有个东西证明，今天不是白跑。"]
+    ]},
+
+    s4a: { t:"scene", ch:"1-4 先走的人", img:"assets/fengyi.jpg", next:"c4", lines:[
+      ["","运输支持发来消息：先遣车已到坡下，只能先带两人，主车还要绕过一道封路。红狼核对了车组，是出发时见过的人。"],
+      ["蜂医","先送他。路上得有人照看。"],
+      ["","驾驶员催了一声。坡口的视野正在变差。"]
+    ]},
+
+    c4: { t:"choice", ch:"1-4 先走的人", img:"assets/breach.jpg", prompt:"选择四 · 怎样安排接应", lines:[
+      ["","车只能带两个人。"]
+    ], options:[
+      { k:"A", text:"我随伤员先走。蜂医把路上需要注意的事告诉我。", next:"c4a", stats:{asala:1} },
+      { k:"B", text:"蜂医陪伤员先走。我到下面的路口给主车指路。", next:"c4b", stats:{gti:1} },
+      { k:"C", text:"蜂医陪伤员先走。我留在坡口，等主车过来。", next:"c4c", stats:{gti:1} }
+    ]},
+
+    c4a: { t:"death", ch:"1-4 先走的人", img:"assets/fengyi.jpg", title:"先到的人",
+      note:"回溯：选择四。医疗车确实将灰鹭送医；主角在单独接受问询时遭暗杀，行凶者的幕后身份尚未查明。",
+      summary:"你让伤员先走，也把该交代的都交代了。医疗点里等着你的，不是队友。",
+      lines:[
+      ["","蜂医告诉我如何观察出血。车驶离后，灰鹭的包扎重新渗红，我按住伤口，手却止不住发抖。"],
+      ["","抵达医疗点时，医护人员接走他。一名等候的人叫出我的代号，让我去旁边说明伤员的情况。我以为红狼很快就会到，跟了进去。"],
+      ["","他关上门，抽走我的通讯器。"],
+      ["那人","他跟你说了多少？"],
+      ["","我还没回答，便被按到桌边。枪声响起，我死在这间没有等到队友的问询室里。"]
+    ]},
+
+    c4b: { t:"death", ch:"1-4 先走的人", img:"assets/honglang_street.jpg", title:"看见你了",
+      note:"回溯：选择四。主角执行的是引导接应，未额外冲锋；独自离开坡口的遮蔽后被敌方截获。",
+      summary:"你站在那束车灯里，以为是自己人到了。",
+      lines:[
+      ["","蜂医扶灰鹭上车。我带着红狼交代的联络信号下到路口，想让主车少走一段找人的路。"],
+      ["","一辆车在弯道停下。车灯闪了约定的次数，我举起手，耳机里的车组却说，他们还没到这个弯。"],
+      ["","车门已经打开。对方没有再伪装接应，枪口对准了路中的我。红狼从坡上还击时，我已经中弹倒下，死在那束仍照着路面的灯光里。"]
+    ]},
+
+    c4c: { t:"scene", ch:"1-4 先走的人", img:"assets/fengyi.jpg", next:"s5a", lines:[
+      ["","蜂医扶灰鹭上车。灰鹭回头看向我拿着的包，最后只是点了一下头。"],
+      ["","红狼让我退到坡口内侧。主车的发动机声出现时，他先与车组核对了当前位置，等车绕到遮挡后才让我上去。"],
+      ["","抵达医疗点时，蜂医已经在入口等候。他带我们直接进入小队使用的安全屋，灰鹭的包也一起放到了床边。"],
+      ["","我刚坐下，才看见掌心有一道磨破的伤口。红狼扔来敷料。"],
+      ["红狼","自己处理。"],
+      ["我","今天这样，算任务完成了吗？"],
+      ["红狼","人和东西都回来了。"],
+      ["我","我是担心没有按命令交接，回去会不会受处分。"],
+      ["红狼","会有人问。为什么改变安排，我来解释。你把看到、听到的事写下来。"]
+    ]},
+
+    s5a: { t:"scene", ch:"1-5 那一家人", img:"assets/huilu.jpg", next:"s5b", lines:[
+      ["","灰鹭处理完伤口，仍要接受问询。蜂医只让我们进去谈一会儿。"],
+      ["灰鹭","都回来了？"],
+      ["我","都在。"],
+      ["","他松了口气，把自己的终端推到床边。屏幕上是一张照片：一个穿工作服的男人按着孩子的肩，女人站在旁边。"],
+      ["灰鹭","纳迪姆，修车的。妻子萨米拉，孩子伊利亚斯。十一岁。"]
+    ]},
+
+    s5b: { t:"scene", ch:"1-5 那一家人", img:"assets/nadimu.jpg", next:"s5c", lines:[
+      ["我","他们跟你被追杀有什么关系？"],
+      ["灰鹭","我在查一批失踪的人。这一家申请过撤离，有人说GTI会把他们送到安全地方。车确实来了，人也走了，可安置点从来没有接到他们。"],
+      ["红狼","也可能换了地方。"],
+      ["灰鹭","我也这么想过。查下去，那辆车最后却朝哈夫克控制区去了。我把这件事报上去，得到的答复是停查。"],
+      ["我","所以你找了那个联系人？"],
+      ["灰鹭","他以前做审核。我想知道这趟接人是不是我们安排的，还是有人打着GTI的名义。他还没查完，接我的车先来了。"]
+    ]},
+
+    s5c: { t:"scene", ch:"1-5 那一家人", img:"assets/huilu.jpg", next:"s5d", lines:[
+      ["红狼","车上的人问了什么？"],
+      ["灰鹭","我找过谁，跟谁说过，有没有把照片传出去。他们不急着带我去治疗，倒很急着要我的通讯器。"],
+      ["","他停了一会儿。"],
+      ["灰鹭","我退开，就看见后窗里的人举枪。"],
+      ["我","他们知道你的联系人是谁吗？"],
+      ["灰鹭","没说出名字。所以我不会再随便把他报给谁。你们救我，不等于下一辆车也会救他。"],
+      ["红狼","我会把你的指控单独交人核查。现在能确认的，是你遭到了袭击；谁安排的，还不能替它写上名字。"],
+      ["灰鹭","这句话，记在前面。"]
+    ]},
+
+    s5d: { t:"scene", ch:"1-5 那一家人", img:"assets/nadimu.jpg", next:"s5e", lines:[
+      ["我","他们还活着吗？"],
+      ["","灰鹭把照片放大。孩子的鞋带散着，父亲的手还停在他肩上。"],
+      ["灰鹭","不知道。萨米拉的姐姐莱拉住在长弓溪谷。她见过接人的车，也知道他们为什么急着离开。先找她，别带着一句“人已经安全转移”去敲门。"],
+      ["红狼","我申请去核实。你继续治疗。"],
+      ["","灰鹭将照片发到我的终端。"],
+      ["灰鹭","这张认人用。别弄错了。"],
+      ["我","记住了。"]
+    ]},
+
+    s5e: { t:"scene", ch:"1-5 那一家人", img:"assets/huilu.jpg", next:"s6a", lines:[
+      ["","蜂医走到床边，示意时间到了。我们起身时，灰鹭又叫住我。"],
+      ["灰鹭","问完以后，如果没找到，也告诉她一声。别让她一直猜你们是不是忘了。"]
+    ]},
+
+    s6a: { t:"scene", ch:"1-6 报告", img:"assets/honglang_street.jpg", next:"s6b", lines:[
+      ["","走廊里，红狼开始回复指挥台的问询。他说话不多，一句一句确认伤员状态、资料位置和撤离经过。"],
+      ["红狼","改变交接安排，是我作出的决定。会写进报告。"],
+      ["","我坐在长椅上打开终端。任务目标仍然只有两项：接回灰鹭，追回资料。"],
+      ["","我先写下身份核验和伤情，再写那辆窗户贴着胶带的医疗车，以及灰鹭拒绝上车的原因。"]
+    ]},
+
+    s6b: { t:"scene", ch:"1-6 报告", img:"assets/hero.jpg", next:"endn", lines:[
+      ["","写到他的指控时，我停了一下，在前面加上两个字。"],
+      ["","“他说。”"],
+      ["","有些事我亲眼看见了，有些还没有。"],
+      ["","门内传来蜂医提醒灰鹭休息的声音。我望了一眼那扇门，继续往下写。"],
+      ["","最后，在待核实事项里记下一个地方。"],
+      ["","长弓溪谷。"]
+    ]},
+
+    endn: { t:"end", ch:"1-6 报告", img:"assets/hero.jpg", title:"被留下的人", sub:"零号大坝 · 第一章 完",
+      body:[
+        "灰鹭活了下来，资料交回了。",
+        "一家人的名字第一次有了具体的脸。",
+        "下一章：长弓溪谷——名单上的村庄（制作中）"
+      ]}
+  }
+};
+
+/* ============================================================
+   引擎
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const elShot=$("shot"), elSub=$("subtitle"), elName=$("name"), elText=$("text"),
+      elHint=$("hint"), elChoices=$("choices"), elPrompt=$("prompt"), elOpts=$("opts"),
+      elDeath=$("death"), elEnd=$("endlay"), elTitle=$("title"), elMenu=$("menu"),
+      elDir=$("director"), elChapter=$("chapterLabel");
+
+const SAVE_KEY = "delta_ch1_v01";
+const S = { node:null, line:0, flags:{}, stats:{gti:0,haafk:0,asala:0},
+            deaths:0, log:[], checkpoint:null, started:0, typing:false, timer:null,
+            done:false, muted:false, currentImg:"" };
+
+let AC = null;
+function tone(freq, dur, gain, type){
+  if (S.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.value = gain;
+    o.connect(g); g.connect(AC.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
+    o.stop(AC.currentTime + dur + 0.02);
+  }catch(e){}
+}
+
+function snapshot(){
+  return JSON.parse(JSON.stringify({ node:S.node, flags:S.flags, stats:S.stats,
+    deaths:S.deaths, log:S.log, started:S.started }));
+}
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign(snapshot(),{line:S.line, checkpoint:S.checkpoint}))); }
+  catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+
+function setImage(src){
+  if (S.currentImg === src) return;
+  S.currentImg = src;
+  elShot.style.opacity = "0";
+  setTimeout(()=>{
+    elShot.src = src;
+    elShot.style.opacity = "1";
+    elShot.classList.remove("kb");
+    void elShot.offsetWidth;
+    elShot.classList.add("kb");
+  }, 220);
+}
+
+function enter(id, line){
+  const n = CH1.nodes[id];
+  if (!n) { console.error("missing node", id); return; }
+  if (n.t === "choice") S.checkpoint = snapshot();
+  S.node = id; S.line = line || 0; S.done = false;
+  elMenu.classList.remove("on");
+  elDeath.classList.remove("on");
+  elEnd.classList.remove("on");
+  elChoices.classList.remove("on");
+  elChapter.textContent = "第一章 · 零号大坝" + (n.ch ? "　/　" + n.ch : "");
+  setImage(n.img);
+  elSub.classList.remove("on");
+  setTimeout(()=>{ showLine(); }, 80);
+  save();
+}
+
+function showLine(){
+  const n = CH1.nodes[S.node];
+  const line = n.lines && n.lines[S.line];
+  if (!line){ endOfNode(); return; }
+  const speaker = line[0], text = line[1];
+  elName.textContent = speaker || "旁 白";
+  elName.classList.toggle("narr", !speaker);
+  elSub.classList.add("on");
+  elHint.classList.remove("on");
+  typeText(elText, text);
+}
+
+function typeText(el, text){
+  clearTimeout(S.timer);
+  el.textContent = "";
+  S.typing = true;
+  let i = 0;
+  const step = ()=>{
+    if (!S.typing) return;
+    el.textContent += text.charAt(i);
+    i++;
+    if (i >= text.length){ S.typing = false; elHint.classList.add("on"); return; }
+    const c = text.charAt(i-1);
+    const d = "，。！？；：、".indexOf(c) >= 0 ? 110 : 22;
+    S.timer = setTimeout(step, d);
+  };
+  step();
+}
+
+function finishTyping(){
+  const n = CH1.nodes[S.node];
+  const line = n.lines[S.line];
+  clearTimeout(S.timer);
+  S.typing = false;
+  elText.textContent = line[1];
+  elHint.classList.add("on");
+}
+
+function endOfNode(){
+  if (S.done) return;
+  S.done = true;
+  const n = CH1.nodes[S.node];
+  if (n.t === "death"){ showDeath(n); return; }
+  if (n.t === "end"){ showEnd(n); return; }
+  if (n.options){ showChoices(n); return; }
+  if (n.next){ enter(n.next); return; }
+}
+
+function advance(){
+  if (elTitle.style.display !== "none" && !elTitle.classList.contains("hide")) return;
+  if (elDeath.classList.contains("on") || elEnd.classList.contains("on")) return;
+  if (elChoices.classList.contains("on")) return;
+  if (elMenu.classList.contains("on")) return;
+  if (elDir.classList.contains("on")) return;
+  const n = CH1.nodes[S.node];
+  if (!n) return;
+  if (S.typing){ finishTyping(); return; }
+  if (S.line < n.lines.length - 1){ S.line++; showLine(); save(); tone(1500,.03,.012,"triangle"); return; }
+  endOfNode();
+}
+
+function showChoices(n){
+  elSub.classList.remove("on");
+  elHint.classList.remove("on");
+  elPrompt.textContent = n.prompt;
+  elOpts.innerHTML = "";
+  n.options.forEach((opt)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = '<span class="k">' + opt.k + '</span><span>' + opt.text + '</span>';
+    b.addEventListener("click", (e)=>{ e.stopPropagation(); pick(opt); });
+    elOpts.appendChild(b);
+  });
+  elChoices.classList.add("on");
+}
+
+function pick(opt){
+  elChoices.classList.remove("on");
+  tone(900,.05,.02,"triangle");
+  if (opt.flags) Object.assign(S.flags, opt.flags);
+  if (opt.stats) for (const k in opt.stats) S.stats[k] = (S.stats[k]||0) + opt.stats[k];
+  S.log.push({ ch: CH1.nodes[S.node].ch, prompt: CH1.nodes[S.node].prompt, pick: opt.k + ". " + opt.text });
+  let next = opt.next;
+  if (opt.route){ next = S.flags[opt.route.flag] ? opt.route.yes : opt.route.no; }
+  enter(next);
+}
+
+function showDeath(n){
+  S.deaths++;
+  tone(60,.9,.09,"sine");
+  setTimeout(()=>tone(48,.7,.06,"sine"), 120);
+  $("deathTitle").textContent = n.title;
+  $("deathSum").textContent = n.summary || "";
+  $("deathNote").textContent = n.note || "";
+  elSub.classList.remove("on");
+  elHint.classList.remove("on");
+  elDeath.classList.add("on");
+  save();
+}
+
+function showEnd(n){
+  $("endlay").querySelector(".title").textContent = n.title;
+  $("endSub").textContent = n.sub;
+  $("endBody").innerHTML = n.body.map(x=>"<div>"+x+"</div>").join("");
+  const mins = Math.max(1, Math.round((Date.now() - (S.started||Date.now()))/60000));
+  $("endStats").innerHTML =
+    "用时 <b>" + mins + " 分钟</b>　·　经历死亡 <b>" + S.deaths + " 次</b><br>" +
+    "倾向　GTI <b>" + S.stats.gti + "</b>　哈夫克 <b>" + S.stats.haafk + "</b>　阿萨拉 <b>" + S.stats.asala + "</b>";
+  elSub.classList.remove("on");
+  elHint.classList.remove("on");
+  elEnd.classList.add("on");
+  clearSave();
+}
+
+function rollback(){
+  elDeath.classList.remove("on");
+  if (!S.checkpoint){ startNew(); return; }
+  const cp = JSON.parse(JSON.stringify(S.checkpoint));
+  S.flags = cp.flags; S.stats = cp.stats; S.log = cp.log;
+  enter(cp.node);
+}
+
+function startNew(){
+  clearSave();
+  S.flags = {}; S.stats = {gti:0,haafk:0,asala:0}; S.deaths = 0; S.log = [];
+  S.checkpoint = null; S.started = Date.now();
+  elTitle.classList.add("hide");
+  elEnd.classList.remove("on");
+  enter(CH1.start);
+}
+
+function resume(){
+  let d = null;
+  try{ d = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); }catch(e){}
+  if (!d){ startNew(); return; }
+  S.flags = d.flags || {}; S.stats = d.stats || {gti:0,haafk:0,asala:0};
+  S.deaths = d.deaths || 0; S.log = d.log || []; S.started = d.started || Date.now();
+  S.checkpoint = d.checkpoint || null;
+  elTitle.classList.add("hide");
+  enter(d.node, d.line || 0);
+}
+
+function toTitle(){
+  elDeath.classList.remove("on"); elEnd.classList.remove("on");
+  elChoices.classList.remove("on"); elMenu.classList.remove("on"); elDir.classList.remove("on");
+  elSub.classList.remove("on"); elHint.classList.remove("on");
+  elTitle.classList.remove("hide");
+  let has = false;
+  try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
+  $("btnContinue").style.display = has ? "block" : "none";
+}
+
+/* ---------- 导演模式 ---------- */
+function toggleDirector(){
+  const on = elDir.classList.toggle("on");
+  if (on){
+    elDir.querySelector("#dState").textContent = JSON.stringify({
+      node:S.node, line:S.line, flags:S.flags, stats:S.stats, deaths:S.deaths,
+      checkpoint:S.checkpoint ? S.checkpoint.node : null
+    }, null, 2);
+    const jump = elDir.querySelector("#dJump");
+    jump.innerHTML = "";
+    Object.keys(CH1.nodes).forEach(id=>{
+      const b = document.createElement("button");
+      b.textContent = id + (CH1.nodes[id].t==="choice" ? " ★" : "");
+      b.onclick = ()=>{ elDir.classList.remove("on"); enter(id); };
+      jump.appendChild(b);
+    });
+  }
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener("click", (e)=>{
+  if (e.target.closest("button")) return;
+  if (e.target.closest("#menu") || e.target.closest("#director")) return;
+  advance();
+});
+document.addEventListener("keydown", (e)=>{
+  if (e.code === "Space" || e.code === "Enter"){ e.preventDefault(); advance(); }
+  else if (e.key === "Escape"){ elMenu.classList.toggle("on"); }
+  else if (e.key === "d" || e.key === "D"){ toggleDirector(); }
+  else if (["1","2","3"].includes(e.key)){
+    const opts = elOpts.querySelectorAll(".opt");
+    const i = parseInt(e.key,10) - 1;
+    if (elChoices.classList.contains("on") && opts[i]) opts[i].click();
+  }
+});
+$("btnStart").onclick = ()=>{ elTitle.classList.add("hide"); startNew(); };
+$("btnContinue").onclick = ()=>{ elTitle.classList.add("hide"); resume(); };
+$("btnHow").onclick = ()=>{
+  alert("玩法：\n\n· 点击画面 / 空格：继续\n· 数字键 1-3 或点击选项：做出选择\n· 选错会进入死亡结局，可以点击「回溯到选择」重来\n· ESC：菜单　D：导演模式\n\n本版为第一章原型，画面为关键帧占位。");
+};
+$("btnBack").onclick = rollback;
+$("btnRestart1").onclick = startNew;
+$("btnReplay").onclick = startNew;
+$("btnToTitle").onclick = toTitle;
+$("btnMenu").onclick = ()=> elMenu.classList.toggle("on");
+$("mResume").onclick = ()=> elMenu.classList.remove("on");
+$("mRestart").onclick = ()=>{ elMenu.classList.remove("on"); startNew(); };
+$("mDirector").onclick = ()=>{ elMenu.classList.remove("on"); toggleDirector(); };
+$("mTitle").onclick = toTitle;
+$("mMute").onclick = (e)=>{
+  S.muted = !S.muted;
+  e.target.textContent = "声音：" + (S.muted ? "关" : "开");
+  elMenu.classList.remove("on");
+};
+$("dClose").onclick = ()=> elDir.classList.remove("on");
+
+/* 初始化 */
+(function init(){
+  const has = (()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } })();
+  $("btnContinue").style.display = has ? "block" : "none";
+  elShot.src = "assets/dam.jpg";
+  if (location.hash === "#play"){ elTitle.classList.add("hide"); startNew(); }
+})();
+</script>
+</body>
+</html>
